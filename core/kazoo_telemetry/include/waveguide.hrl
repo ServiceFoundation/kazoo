@@ -15,9 +15,8 @@
 -define(DAY_IN_MS, ?DAY_IN_SECONDS * 1000).
 
 -define(WG_CAT, <<(?TELEMETRY_CAT)/binary,".waveguide">>).
--define(WG_GRACE_PERIOD, 1209600).
-% -define(WG_URL, <<"https://telemetry.2600hz.org/api">>).
--define(WG_URL, <<"http://homestead.test/api">>).
+-define(WG_GRACE_PERIOD, 604800).
+-define(WG_URL, <<"https://telemetry.2600hz.org/api">>).
 -define(WG_USER_AGENT, <<"waveguide/",(?WG_VERSION)/binary>>).
 -define(WG_VERSION, <<"0.1.0">>).
 
