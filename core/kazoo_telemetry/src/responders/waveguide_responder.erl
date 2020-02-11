@@ -204,7 +204,7 @@ submitting('state_timeout', 'timeout', _State) ->
 %%------------------------------------------------------------------------------
 -spec waiting(gen_statem:event_type(), statem_events(), state()) -> statem_reply().
 waiting('enter', _OldState, State) ->
-    {'keep_state', State, [{'state_timeout', ?DAY_IN_MS, 'wakeup'}]};
+    {'keep_state', State, [{'state_timeout', ?TM_COLLECTION_INTERVAL*1000, 'wakeup'}]};
 waiting('state_timeout', 'wakeup', State) ->
     {'next_state', 'submitting', State}.
 

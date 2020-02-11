@@ -34,5 +34,9 @@
        ,kapps_config:get_boolean(?TELEMETRY_CAT, <<"include_services">>, 'true', <<"default">>)
        ).
 
+-define(TM_COLLECTION_INTERVAL
+       ,kapps_config:get_integer(?TELEMETRY_CAT, <<"collection_interval_s">>, 86400, <<"default">>)
+       ).
+
 -define(KAZOO_TELEMETRY_HRL, 'true').
 -endif.

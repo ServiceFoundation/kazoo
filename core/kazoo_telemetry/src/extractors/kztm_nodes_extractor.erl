@@ -116,10 +116,10 @@ media_servers(Servers) ->
 %%------------------------------------------------------------------------------
 -spec media_servers_foldl({kz_term:ne_binary(), kz_json:object()}, kz_json:objects()) -> kz_json:objects().
 media_servers_foldl({Server, Meta}, Acc) ->
-    Stats = kz_json:from_list([{<<"sessions">>, kz_json:get_value(<<"Sessions">>, Meta)}
-                              ,{<<"startup">>, kz_json:get_value(<<"Startup">>, Meta)}
-                              ,{<<"version">>, kz_json:get_value(<<"Version">>, Meta)}
-                              ]),
+    Stats = kz_json:from_list(props:filter_empty([{<<"sessions">>, kz_json:get_value(<<"Sessions">>, Meta)}
+                                                 ,{<<"startup">>, kz_json:get_value(<<"Startup">>, Meta)}
+                                                 ,{<<"version">>, binary:replace(kz_json:get_ne_binary_value(<<"Version">>, Meta, <<"">>), <<" ">>, <<"-">>, ['global'])}
+                                                 ])),
     kz_json:set_value(Server, Stats, Acc).
 
 %%------------------------------------------------------------------------------

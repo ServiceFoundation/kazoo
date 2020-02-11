@@ -116,6 +116,7 @@ reduce_runtime_stats(Obj, Acc) ->
     Nodes = kz_json:get_value([<<"topology">>, <<"nodes">>], Obj),
     Routines = [{fun node_summary/2, Nodes}
                ,{fun freeswitch_summary/2, Nodes}
+               ,{fun calculate_aggregates/2, Nodes}
                ],
     lists:foldl(fun reduce_fold_fun/2, Acc, Routines).
 
@@ -159,9 +160,9 @@ node_type_rollup(Node, Acc) ->
 node_version_rollup(Node, Acc) ->
     Type = kz_json:get_ne_binary_value(<<"type">>, Node),
     Version = kz_json:get_ne_binary_value(<<"version">>, Node),
-    Key = <<(?TOPO_NODES_KEY)/binary,(format_wg_id([Type, <<"version">>]))/binary>>,
-    Val = kz_json:get_value(Key, Acc, []),
-    kz_json:set_value(Key, [Version | Val], Acc).
+    Key = <<(?TOPO_NODES_KEY)/binary,(format_wg_id([Type, <<"version">>]))/binary,".",(format_wg_id(Version))/binary>>,
+    Cnt = kz_json:get_value(Key, Acc, 0),
+    kz_json:set_value(Key, Cnt + 1, Acc).
 
 %%------------------------------------------------------------------------------
 %% @doc
@@ -208,7 +209,7 @@ node_apps_rollup_runtime(App, Acc) ->
     Name = kz_json:get_value(<<"name">>, App),
     Startup = kz_json:get_value(<<"startup">>, App),
     Elapsed = kz_time:elapsed_s(Startup),
-    Key = <<(?RT_STATS_KEY)/binary,"apps.",(format_wg_id([Name, <<"uptime">>]))/binary>>,
+    Key = <<(?RT_STATS_KEY)/binary,"apps.",(format_wg_id([Name]))/binary,".uptime">>,
     Val = kz_json:get_value(Key, Acc, []),
     kz_json:set_value(Key, [Elapsed | Val], Acc).
 
@@ -226,7 +227,7 @@ node_kamailio_stats(Node, Acc, 'true') ->
     case kz_json:get_ne_binary_value(<<"type">>, Node) of
         <<"kamailio">> ->
             Registrations = kz_json:get_integer_value([<<"metadata">>, <<"registrations">>], Node),
-            Key = <<(?RT_STATS_KEY)/binary,"registrations.count">>,
+            Key = <<(?RT_STATS_KEY)/binary,"kamailio.registrations.count">>,
             Count = kz_json:get_integer_value(Key, Acc, 0),
             kz_json:set_value(Key, Count + Registrations, Acc);
         _ -> Acc
@@ -245,6 +246,29 @@ freeswitch_summary(_Nodes, Acc, 'false') -> Acc;
 freeswitch_summary(Nodes, Acc, 'true') ->
     MediaServers = dedupe_media_servers(Nodes),
     kz_json:foldl(fun node_freeswitch_summary_foldl/3, Acc, MediaServers).
+
+
+%%------------------------------------------------------------------------------
+%% @doc
+%% @end
+%%------------------------------------------------------------------------------
+-spec calculate_aggregates(kz_json:objects(), kz_json:object()) -> kz_json:objects().
+calculate_aggregates(_Nodes, Acc) ->
+    Stats = kz_json:foldl(fun calculate_aggregate/3, kz_json:new(), Acc),
+    kz_json:merge(Stats, Acc).
+
+-spec calculate_aggregate(kz_term:binary(), kz_term:binaries() | any(), kz_json:object()) -> kz_json:objects().
+calculate_aggregate(K, V, Acc)
+    when is_list(V)
+        andalso length(V) > 0 ->
+    [A, B, C, _D] = binary:split(K, <<".">>, ['global']),
+    Key0 = <<A/binary,".",B/binary,".",(format_wg_id([C]))/binary>>,
+    Stats = kz_json:from_list([{<<Key0/binary,".Min">>, lists:min(V)}
+                              ,{<<Key0/binary,".Max">>, lists:max(V)}
+                              ,{<<Key0/binary,".Avg">>, lists:sum(V) / length(V)}
+                              ]),
+    kz_json:merge(Acc, Stats);
+calculate_aggregate(_K, _V, Acc) -> Acc.
 
 %%------------------------------------------------------------------------------
 %% @doc
@@ -278,17 +302,18 @@ node_freeswitch_summary_foldl(_K, V, Acc) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec rollup_freeswitch_jobj(kz_term:ne_binaries(), non_neg_integer() | kz_term:ne_binary(), kz_json:object()) -> kz_json:object().
-rollup_freeswitch_jobj(K, V, Acc) when is_binary(V) ->
-    Key = <<(?TOPO_NODES_KEY)/binary,"freeswitch.",(format_wg_id(K))/binary>>,
-    Versions = kz_json:get_value(Key, Acc, []),
-    kz_json:set_value(Key, [V | Versions], Acc);
-rollup_freeswitch_jobj([<<"startup">>]=_K, V, Acc)
+rollup_freeswitch_jobj(_K, V, Acc) when is_binary(V) ->
+    Version = binary:replace(V, <<".">>, <<"_">>, ['global']),
+    Key = <<(?TOPO_NODES_KEY)/binary,(format_wg_id([<<"freeswitch">>, <<"version">>]))/binary,".",Version/binary>>,
+    Cnt = kz_json:get_value(Key, Acc, 0),
+    kz_json:set_value(Key, Cnt + 1, Acc);
+rollup_freeswitch_jobj([<<"startup">>]=_ObjK, V, Acc)
   when is_integer(V) ->
-    Key = <<(?RT_STATS_KEY)/binary,"freeswitch.uptime">>,
+    Key = <<(?RT_STATS_KEY)/binary,"freeswitch.uptime.count">>,
     Uptimes = kz_json:get_value(Key, Acc, []),
     kz_json:set_value(Key, [kz_time:elapsed_s(V) | Uptimes], Acc);
 rollup_freeswitch_jobj(K, V, Acc) when is_integer(V) ->
-    Key = <<(?RT_STATS_KEY)/binary,"freeswitch.",(format_wg_id(K))/binary>>,
+    Key = <<(?RT_STATS_KEY)/binary,"freeswitch.",(format_wg_id(K))/binary,".count">>,
     Stat = kz_json:get_value(Key, Acc, []),
     kz_json:set_value(Key, [V | Stat], Acc).
 
@@ -322,8 +347,10 @@ rollup_db_cluster_jobjs(Cluster, Acc) ->
 -spec normalize_db_cluster_stats(kz_term:binary(), kz_term:binary() | kz_term:binaries() | non_neg_integer(), kz_json:objects()) -> kz_json:objects().
 normalize_db_cluster_stats(K, V, Acc) when is_list(V) ->
     normalize_db_cluster_stats(K, length(V), Acc);
+normalize_db_cluster_stats([Tag, Stat], V, Acc) when is_binary(V) ->
+    kz_json:set_value(<<(?TOPO_DB_KEY)/binary,(format_wg_id([?ANONYMIZE(Tag), Stat]))/binary,".",(format_wg_id(V))/binary>>, 1, Acc);
 normalize_db_cluster_stats([Tag, Stat], V, Acc) ->
-    kz_json:set_value(<<(?TOPO_DB_KEY)/binary,(format_wg_id([?ANONYMIZE(Tag), Stat]))/binary>>, V, Acc).
+    kz_json:set_value(<<(?TOPO_DB_KEY)/binary,(format_wg_id([?ANONYMIZE(Tag)]))/binary,".",Stat/binary>>, V, Acc).
 
 %%------------------------------------------------------------------------------
 %% @doc
@@ -353,7 +380,8 @@ normalize_service_items(Obj, Acc) ->
 %%------------------------------------------------------------------------------
 -spec normalize_services_items_foldl(kz_term:binary(), kz_term:ne_binary() | kz_term:binaries() | non_neg_integer(), kz_json:objects()) -> kz_json:object().
 normalize_services_items_foldl(K, V, Acc) ->
-    kz_json:set_value(<<(?SERVICES_KEY)/binary,(format_wg_id(K))/binary,".count">>, V, Acc).
+    [Category | Rest] = K,
+    kz_json:set_value(<<(?SERVICES_KEY)/binary,Category/binary,".",(format_wg_id(Rest))/binary,".count">>, V, Acc).
 
 %%------------------------------------------------------------------------------
 %% @doc extract and count unique fqdns to assert physical node counts
@@ -392,7 +420,11 @@ normalize_summaries_foldl(Key, Value, Acc) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec format_wg_id(kz_term:binary() | kz_term:binaries()) -> kz_term:binary().
-format_wg_id(A) when is_binary(A) -> A;
+format_wg_id(A) when is_binary(A) ->
+    Temp = binary:split(A, <<".">>, ['global']),
+    kz_binary:join(Temp, <<"_">>);
 format_wg_id([A]) -> A;
-format_wg_id([A, B]) -> <<A/binary,".",B/binary>>;
-format_wg_id([A, B, C]) -> <<A/binary,"_",B/binary,".",C/binary>>.
+format_wg_id([A, B]) -> <<A/binary,"_",B/binary>>;
+format_wg_id([A, B, C]) -> <<A/binary,"_",B/binary,"_",C/binary>>.
+
+
