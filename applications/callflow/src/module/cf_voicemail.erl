@@ -1340,8 +1340,8 @@ toggle_announcement_mode(#mailbox{mailbox_id=Id}=Box, Call, Value) ->
     AccountDb = kapps_call:account_db(Call),
 
     {'ok', JObj} = kz_datamgr:open_cache_doc(AccountDb, Id),
-
-    case validate_box_schema(kz_json:set_value(<<"announcement_only">>, Value, JObj)) of
+    JObj0 = kz_json:set_value(<<"announcement_only">>, Value, JObj),
+    case kz_json_schema:validate(<<"vmboxes">>, kz_doc:public_fields(JObj0)) of
         {'ok', PublicJObj} ->
             PrivJObj = kz_doc:private_fields(JObj),
 
