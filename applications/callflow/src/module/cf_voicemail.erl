@@ -1386,13 +1386,13 @@ handle_config_selection(#mailbox{}=Box
     lager:info("undefined config menu option '~s'", [_Selection]),
     config_menu(Box, Call, Loop + 1).
 
--spec toggle_announcement_mode(mailbox(), kapps_call:call()) -> mailbox() | {'error' | any()}.
+-spec toggle_announcement_mode(mailbox(), kapps_call:call()) ->  mailbox() | {'error', any()}.
 toggle_announcement_mode(#mailbox{announcement_only='true'}=Box, Call) ->
     toggle_announcement_mode(Box, Call, 'false');
 toggle_announcement_mode(Box, Call) ->
     toggle_announcement_mode(Box, Call, 'true').
 
--spec toggle_announcement_mode(mailbox(), kapps_call:call(), kz_term:ne_binary()) -> mailbox() | {'error' | any()}.
+-spec toggle_announcement_mode(mailbox(), kapps_call:call(), kz_term:ne_binary()) ->  mailbox() | {'error', any()}.
 toggle_announcement_mode(#mailbox{mailbox_id=Id}=Box, Call, Value) ->
     AccountDb = kapps_call:account_db(Call),
 
@@ -1407,8 +1407,9 @@ toggle_announcement_mode(#mailbox{mailbox_id=Id}=Box, Call, Value) ->
             {'ok', _} = kz_datamgr:save_doc(AccountDb, JObj1),
             lager:info("updated announcement only to ~p", [Value]),
             Box#mailbox{announcement_only=Value};
-        {'error', _Reason} ->
-            lager:debug("failed toggling announcement only mode: ~p", [_Reason])
+        {'error', _Reason}=E ->
+            lager:debug("failed toggling announcement only mode: ~p", [_Reason]),
+            E
     end.
 
 %%------------------------------------------------------------------------------
