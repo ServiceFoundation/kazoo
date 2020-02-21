@@ -269,33 +269,33 @@ check_mailbox(#mailbox{pin = <<>>}, _, Call, _) ->
 check_mailbox(#mailbox{pin=Pin
                       ,interdigit_timeout=Interdigit
                       }=Box, IsOwner, Call, Loop) ->
-  lager:info("requesting pin number to check mailbox"),
+    lager:info("requesting pin number to check mailbox"),
 
-  NoopId = kapps_call_command:prompt(<<"vm-enter_pass">>, Call),
+    NoopId = kapps_call_command:prompt(<<"vm-enter_pass">>, Call),
 
-  case kapps_call_command:collect_digits(?DEFAULT_MAX_PIN_LENGTH
-                                        ,kapps_call_command:default_collect_timeout()
-                                        ,Interdigit
-                                        ,NoopId
-                                        ,Call
-                                        )
-  of
-      {'ok', Pin} ->
-          lager:info("caller entered a valid pin"),
-          check_mailbox_menu(Box, Call);
-      {'ok', _} ->
-          lager:info("invalid mailbox login"),
-          _ = kapps_call_command:b_prompt(<<"vm-fail_auth">>, Call),
-          check_mailbox(Box, IsOwner, Call, Loop + 1);
-      _ ->
-          'ok'
-  end.
+    case kapps_call_command:collect_digits(?DEFAULT_MAX_PIN_LENGTH
+                                          ,kapps_call_command:default_collect_timeout()
+                                          ,Interdigit
+                                          ,NoopId
+                                          ,Call
+                                          )
+    of
+        {'ok', Pin} ->
+            lager:info("caller entered a valid pin"),
+            check_mailbox_menu(Box, Call);
+        {'ok', _} ->
+            lager:info("invalid mailbox login"),
+            _ = kapps_call_command:b_prompt(<<"vm-fail_auth">>, Call),
+            check_mailbox(Box, IsOwner, Call, Loop + 1);
+        _ ->
+            'ok'
+    end.
 
 -spec check_mailbox_menu(mailbox(), kapps_call:call()) -> 'ok' | {'error', 'channel_hungup'}.
 check_mailbox_menu(#mailbox{announcement_only='true'}=Box, Call) -> config_menu(Box, Call);
 check_mailbox_menu(Box, Call) -> main_menu(Box, Call).
 
-  %%------------------------------------------------------------------------------
+%%------------------------------------------------------------------------------
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
@@ -407,8 +407,8 @@ compose_voicemail(#mailbox{announcement_only='true'}=Box, 'true', Call) ->
     lager:info("overriding action as check (instead of compose)"),
     check_mailbox(Box, Call);
 compose_voicemail(#mailbox{announcement_only='true'}=Box, _IsOwner, Call) ->
-  lager:notice("mailbox is configured for announcement only"),
-  play_announcement(Box, Call);
+    lager:notice("mailbox is configured for announcement only"),
+    play_announcement(Box, Call);
 compose_voicemail(#mailbox{exists='false'}, _IsOwner, Call) ->
     lager:info("attempted to compose voicemail for missing mailbox"),
     _ = kapps_call_command:b_prompt(<<"vm-not_available_no_voicemail">>, Call),
@@ -427,19 +427,19 @@ compose_voicemail(Box, _IsOwner, Call) ->
 
 -spec play_announcement(mailbox(), kapps_call:call()) -> compose_return().
 play_announcement(Box, Call) ->
-  _ = play_greeting(Box, Call),
-  _NoopId = kapps_call_command:noop(Call),
-  %% timeout after 5 min for safety, so this process cant hang around forever
-  case kapps_call_command:wait_for_application_or_dtmf(<<"noop">>, 300000) of
-      {'ok', _} ->
-          lager:notice("playing mailbox announcement"),
-          'ok';
-      {'dtmf', Digit} ->
-          _ = kapps_call_command:b_flush(Call),
-          handle_announce_dtmf(Box, Call, Digit);
-      {'error', R} ->
-          lager:info("error while playing announcement: ~p", [R])
-  end.
+    _ = play_greeting(Box, Call),
+    _NoopId = kapps_call_command:noop(Call),
+    %% timeout after 5 min for safety, so this process cant hang around forever
+    case kapps_call_command:wait_for_application_or_dtmf(<<"noop">>, 300000) of
+        {'ok', _} ->
+            lager:notice("playing mailbox announcement"),
+            'ok';
+        {'dtmf', Digit} ->
+            _ = kapps_call_command:b_flush(Call),
+            handle_announce_dtmf(Box, Call, Digit);
+        {'error', R} ->
+            lager:info("error while playing announcement: ~p", [R])
+    end.
 
 -spec start_composing_voicemail(mailbox(), kapps_call:call()) -> compose_return().
 start_composing_voicemail(#mailbox{media_extension=Ext}=Box, Call) ->
@@ -1197,9 +1197,9 @@ message_menu(Prompt, #mailbox{keys=#keys{replay=Replay
 %%------------------------------------------------------------------------------
 -spec config_prompt(mailbox()) -> kz_term:ne_binary().
 config_prompt(#mailbox{announcement_only='true'}) ->
-  <<"vm-settings_menu_announcement_on">>;
+    <<"vm-settings_menu_announcement_on">>;
 config_prompt(_) ->
-  <<"vm-settings_menu_announcement_off">>.
+    <<"vm-settings_menu_announcement_off">>.
 
 -spec config_menu(mailbox(), kapps_call:call()) ->
           'ok' | mailbox() |
@@ -1220,11 +1220,11 @@ config_menu(#mailbox{interdigit_timeout=Interdigit}=Box
     NoopId = kapps_call_command:prompt(Prompt, Call),
 
     case kapps_call_command :collect_digits(?KEY_LENGTH
-                                          ,kapps_call_command:default_collect_timeout()
-                                          ,Interdigit
-                                          ,NoopId
-                                          ,Call
-                                          )
+                                           ,kapps_call_command:default_collect_timeout()
+                                           ,Interdigit
+                                           ,NoopId
+                                           ,Call
+                                           )
     of
         {'ok', Selection} ->
             handle_config_selection(Box, Call, Loop, Selection);
@@ -1300,7 +1300,7 @@ handle_config_selection(#mailbox{keys=#keys{return_main=Selection}}=Box
                        ,Selection
                        ) ->
     lager:info("caller chose to return to the main menu"),
-    % Box;
+                                                % Box;
     main_menu(Box, Call);
 %% toggle mailbox announcement only state
 handle_config_selection(#mailbox{keys=#keys{toggle_announcement_mode=Selection}}=Box
@@ -1331,12 +1331,12 @@ handle_config_selection(#mailbox{}=Box
 
 -spec toggle_announcement_mode(mailbox(), kapps_call:call()) -> mailbox() | {'error' | any()}.
 toggle_announcement_mode(#mailbox{announcement_only='true'}=Box, Call) ->
-  toggle_announcement_mode(Box, Call, 'false');
+    toggle_announcement_mode(Box, Call, 'false');
 toggle_announcement_mode(Box, Call) ->
-  toggle_announcement_mode(Box, Call, 'true').
+    toggle_announcement_mode(Box, Call, 'true').
 
-  -spec toggle_announcement_mode(mailbox(), kapps_call:call(), kz_term:ne_binary()) -> mailbox() | {'error' | any()}.
-  toggle_announcement_mode(#mailbox{mailbox_id=Id}=Box, Call, Value) ->
+-spec toggle_announcement_mode(mailbox(), kapps_call:call(), kz_term:ne_binary()) -> mailbox() | {'error' | any()}.
+toggle_announcement_mode(#mailbox{mailbox_id=Id}=Box, Call, Value) ->
     AccountDb = kapps_call:account_db(Call),
 
     {'ok', JObj} = kz_datamgr:open_cache_doc(AccountDb, Id),
