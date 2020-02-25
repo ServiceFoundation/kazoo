@@ -48,6 +48,15 @@ The old `save/2` took an updater function and tried to save the result. Because 
 
 5. Crossbar API version 1 has been deprecated. This is the last major version of Kazoo with support of `v1`. Please consider migrating your customize Crossbar modules from version 1 to version 2. Also upgrade your applications, UI or scripts to use version 2. This is the last version of Kazoo which is deprecated Kazoo-UI works with.
 
+6. Adds kazoo_telemetry application
+
+KAZOO collects anonymous telemetry data by default so that we can provide you with the best performance, stability, and security. It enables us to continuously improve the platform for you and helps inform our roadmap decisions so we can create the products, features, and functionality that will best serve you. Rest assured — no sensitive data is transmitted and metrics are limited to aggregate values, aggregate statistics, and software version information. By allowing us to collect this data, you are making a contribution to the KAZOO community and are helping us make KAZOO better for you and the entire KAZOO community. You can opt-out at any time by consulting the configuration document in the system_config database.
+
+Here are a few examples:
+- https://success.trendmicro.com/data-collection-disclosure
+- https://www.mozilla.org/en-US/privacy/firefox/
+- https://derflounder.wordpress.com/2019/07/23/suppressing-microsoft-autoupdates-required-data-notice-screen/
+
 ### 4.2
 
 1.  Erlang Version Support

@@ -2271,18 +2271,35 @@ migration_ran() ->
 
 -spec maybe_log_telemetry_warning() -> 'no_return'.
 maybe_log_telemetry_warning() ->
-    maybe_log_telemetry_warning(wg_util:enabled()).
+    print_header(),
+    maybe_log_telemetry_warning(wg_util:days_remaining()).
 
--spec maybe_log_telemetry_warning(boolean()) -> 'no_return'.
-maybe_log_telemetry_warning('false') -> 'no_return';
-maybe_log_telemetry_warning('true'=Enabled) ->
-    lager:warning("anonymous usage statistics are ~s.", [Enabled]),
-    lager:warning("please modify system_config.telemetry if you wish to disable anonymous metric gathering."),
-    maybe_log_telemetry_warning(Enabled, wg_util:days_remaining()).
-
--spec maybe_log_telemetry_warning(boolean(), non_neg_integer()) -> 'no_return'.
-maybe_log_telemetry_warning('true', Days)
+-spec maybe_log_telemetry_warning(non_neg_integer()) -> 'no_return'.
+maybe_log_telemetry_warning(Days)
   when is_integer(Days)
        andalso Days > 0 ->
-    lager:warning("anonymous statistics gathering will activate in ~s days", [Days]),
+    io:format("~n~n      KAZOO telemetry will activate in ~p days.~n~n", [Days]),
+    'no_return';
+maybe_log_telemetry_warning(_Days) ->
+    io:format("~n~n      KAZOO telemetry is activated.~n~n"),
+    'no_return'.
+
+-spec print_header() -> 'no_return'.
+print_header() ->
+    io:format("~n~n"),
+    io:format("     KAZOO collects anonymous telemetry data by default so that we can provide~n"),
+    io:format("     you with the best performance, stability, and security. It enables us to~n"),
+    io:format("     continuously improve the platform for you and helps inform our roadmap~n"),
+    io:format("     decisions so we can create the products, features, and functionality that~n"),
+    io:format("     will best serve you. Rest assured — no sensitive data is transmitted and~n"),
+    io:format("     metrics are limited to aggregate values, aggregate statistics, and~n"),
+    io:format("     software version information.~n~n"),
+    io:format("     By allowing us to collect this data, you are making a contribution to~n"),
+    io:format("     the KAZOO community and are helping us make KAZOO better for you and~n"),
+    io:format("     the entire KAZOO community. You can opt-out at any time by consulting~n"),
+    io:format("     the configuration document in the system_config database.~n~n"),
+    io:format("     Here are a few examples:~n"),
+    io:format("       - https://success.trendmicro.com/data-collection-disclosure~n"),
+    io:format("       - https://www.mozilla.org/en-US/privacy/firefox/~n"),
+    io:format("       - https://derflounder.wordpress.com/2019/07/23/suppressing-microsoft-autoupdates-required-data-notice-screen/~n"),
     'no_return'.
