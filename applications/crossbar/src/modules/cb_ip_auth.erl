@@ -23,7 +23,6 @@
 
 -include("crossbar.hrl").
 
--define(AGG_VIEW_FILE, <<"views/accounts.json">>).
 -define(AGG_VIEW_IP, <<"accounts/listing_by_ip">>).
 
 %%%=============================================================================

@@ -40,7 +40,6 @@
 -define(PROVIDERS_VIEW, <<"providers/list_by_type">>).
 -define(PROVIDERS_APP_VIEW, <<"apps/list_by_provider">>).
 -define(APPS_VIEW, <<"apps/list_by_account">>).
--define(KEYS_VIEW, <<"auth/list_keys">>).
 
 -define(PUBLIC_KEY_MIME, [{<<"application">>, <<"x-pem-file">>}]).
 
