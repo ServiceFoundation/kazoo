@@ -30,7 +30,6 @@
 
 -include("crossbar.hrl").
 
--define(AGG_VIEW_FILE, <<"views/accounts.json">>).
 -define(AGG_VIEW_API, <<"accounts/listing_by_api">>).
 -define(API_AUTH_TOKENS, kapps_config:get_integer(?CONFIG_CAT, <<"api_auth_tokens">>, 35)).
 
