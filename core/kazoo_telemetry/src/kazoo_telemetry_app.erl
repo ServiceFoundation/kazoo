@@ -38,10 +38,3 @@ stop(_State) ->
 -spec request(kz_nodes:request_acc()) -> kz_nodes:request_acc().
 request(Acc) ->
    Acc.
-
-% -spec node_info(atom(), kz_time:gregorian_seconds()) -> kz_term:api_object().
-% node_info(Server, Started) ->
-%     kz_json:from_list([{<<"Startup">>, Started}
-%                       ]).
-
-
