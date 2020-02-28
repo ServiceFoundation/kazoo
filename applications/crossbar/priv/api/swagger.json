@@ -37644,6 +37644,11 @@
                     "description": "telemetry cluster_id_anonymized",
                     "type": "boolean"
                 },
+                "collection_interval_s": {
+                    "default": 86400,
+                    "description": "telemetry collection_interval_s",
+                    "type": "integer"
+                },
                 "include_apps": {
                     "default": true,
                     "description": "telemetry include_apps",
