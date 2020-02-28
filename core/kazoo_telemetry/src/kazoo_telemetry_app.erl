@@ -36,5 +36,4 @@ stop(_State) ->
     'ok'.
 
 -spec request(kz_nodes:request_acc()) -> kz_nodes:request_acc().
-request(Acc) ->
-   Acc.
+request(Acc) -> Acc.
