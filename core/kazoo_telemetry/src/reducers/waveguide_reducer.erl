@@ -258,8 +258,8 @@ calculate_aggregates(_Nodes, Acc) ->
 
 -spec calculate_aggregate(kz_term:binary(), kz_term:binaries() | any(), kz_json:object()) -> kz_json:objects().
 calculate_aggregate(K, V, Acc)
-    when is_list(V)
-        andalso length(V) > 0 ->
+  when is_list(V)
+       andalso length(V) > 0 ->
     [A, B, C, _D] = binary:split(K, <<".">>, ['global']),
     Key0 = <<A/binary,".",B/binary,".",(format_wg_id([C]))/binary>>,
     Stats = kz_json:from_list([{<<Key0/binary,".Min">>, lists:min(V)}
