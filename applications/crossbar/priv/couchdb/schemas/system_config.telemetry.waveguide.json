@@ -1,1 +1,12 @@
-{"type":"object","properties":{"activation":{"type":"integer","description":"telemetry waveguide activation"}},"description":"Schema for telemetry.waveguide system_config","_id":"system_config.telemetry.waveguide","$schema":"http://json-schema.org/draft-04/schema#"}
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "_id": "system_config.telemetry.waveguide",
+    "description": "Schema for telemetry.waveguide system_config",
+    "properties": {
+        "activation": {
+            "description": "telemetry waveguide activation",
+            "type": "integer"
+        }
+    },
+    "type": "object"
+}
