@@ -218,19 +218,23 @@ waiting('state_timeout', 'wakeup', State) ->
 -spec create_alert(non_neg_integer()) -> 'ok'.
 create_alert(Days) ->
     DaysBin = integer_to_binary(Days),
-    {'ok', AccountId} = kapps_util:get_master_account_id(),
-    Props = [{<<"category">>, <<"kazoo_telemetry">>}
-            ],
-    From = [kz_json:from_list([{<<"type">>, <<"account">>}
-                              ,{<<"value">>, AccountId}
-                              ])
-           ],
-    To = [kz_json:from_list([{<<"type">>, AccountId}
-                            ,{<<"value">>, <<"admins">>}
-                            ])
-         ],
-    Title = <<"kazoo telemetry grace period active">>,
-    Msg = <<"kazoo telemetry will automatically enable in ",DaysBin/binary," days.">>,
-    {'ok', AlertJObj} = kapps_alert:create(Title, Msg, From, To, Props),
-    {'ok', _} = kapps_alert:save(AlertJObj),
-    'ok'.
+    case kapps_util:get_master_account_id() of
+        {'ok', AccountId} ->
+            Props = [{<<"category">>, <<"kazoo_telemetry">>}
+                    ],
+            From = [kz_json:from_list([{<<"type">>, <<"account">>}
+                                      ,{<<"value">>, AccountId}
+                                      ])
+                   ],
+            To = [kz_json:from_list([{<<"type">>, AccountId}
+                                    ,{<<"value">>, <<"admins">>}
+                                    ])
+                 ],
+            Title = <<"kazoo telemetry grace period active">>,
+            Msg = <<"kazoo telemetry will automatically enable in ",DaysBin/binary," days.">>,
+            {'ok', AlertJObj} = kapps_alert:create(Title, Msg, From, To, Props),
+            {'ok', _} = kapps_alert:save(AlertJObj),
+            'ok';
+        _ -> 'ok'
+    end.
+
